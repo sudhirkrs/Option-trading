@@ -128,8 +128,6 @@ class NSE:
         if not (j and j.get("records", {}).get("data")):
             return None, None
         rows = []
-        sample = next((d for d in j["records"]["data"] if d.get("CE")), {})
-        log(f"NSE chain row keys: {sorted(sample.keys())}; CE keys: {sorted(sample.get('CE', {}).keys())}")
         for d in j["records"]["data"]:
             e = d.get("expiryDate") or d.get("expiryDates")
             if e and e != exp_s:
@@ -139,8 +137,8 @@ class NSE:
                 if not leg:
                     continue
                 rows.append(dict(strike=int(d["strikePrice"]), type=opt,
-                                 bid=float(leg.get("bidprice") or leg.get("bidPrice") or 0),
-                                 ask=float(leg.get("askPrice") or leg.get("askprice") or 0),
+                                 bid=float(leg.get("buyPrice1") or leg.get("bidprice") or 0),
+                                 ask=float(leg.get("sellPrice1") or leg.get("askPrice") or 0),
                                  ltp=float(leg.get("lastPrice") or 0),
                                  oi=float(leg.get("openInterest") or 0)))
         return (pd.DataFrame(rows) if rows else None), j["records"].get("underlyingValue")
