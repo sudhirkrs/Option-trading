@@ -251,10 +251,19 @@ def main():
     else:
         reasons.append("trend unknown (no price history)")
 
+    def best(opt, target):
+        """Furthest-OTM spread (short delta up to 0.30) that meets the credit/width
+        minimum; falls back to the plain delta target when none does."""
+        tries = [spread(p, opt, d, widths) for d in sorted({min(target, 0.30), 0.25, 0.28, 0.30})]
+        ok = [s for s in tries if s["ratio"] >= a.min_credit_ratio]
+        if ok:
+            return min(ok, key=lambda s: abs(p.delta(s["short"], opt)))
+        return spread(p, opt, target, widths)
+
     cands = {
-        "BEAR CALL SPREAD": [spread(p, "CE", a.directional_delta, widths)],
-        "BULL PUT SPREAD": [spread(p, "PE", a.directional_delta, widths)],
-        "IRON CONDOR": [spread(p, "PE", a.neutral_delta, widths), spread(p, "CE", a.neutral_delta, widths)],
+        "BEAR CALL SPREAD": [best("CE", a.directional_delta)],
+        "BULL PUT SPREAD": [best("PE", a.directional_delta)],
+        "IRON CONDOR": [best("PE", a.neutral_delta), best("CE", a.neutral_delta)],
     }
 
     def card(name, sides):

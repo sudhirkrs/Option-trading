@@ -3,10 +3,54 @@
 Prepared 29 Sep 2026 (evening, IST) for trades starting **Wed 30 Sep 2026**.
 Every structure here is **defined-risk**: each short option is paired with a long
 option, or with stock you already own, so the worst-case loss is known before entry.
-There is no naked selling anywhere in this plan.
+There is no naked selling anywhere in this plan. Sized for **₹5 lakh** capital.
+
+**It runs by itself.** Every weekday at ~10:05 and ~11:35 IST, a GitHub Action
+fetches live NIFTY spot, India VIX, 1-year history (Yahoo Finance) and the live
+option chain (NSE), applies every rule in this playbook, and publishes a
+**TRADE / NO TRADE** card. See [section 0](#0-automation-daily-trade-card).
 
 > Estimates for analysis. Verify lot size, expiry, margin and charges against the
 > exchange and your broker before trading. Not investment advice.
+
+---
+
+## 0. Automation: daily trade card
+
+| What | Where |
+|---|---|
+| Each run's card | GitHub → **Actions** → **Daily trade card** → the run → **Summary** |
+| History of every card | [`reports/`](reports/) folder (one Markdown file per run) |
+| Alert when it says TRADE | A new **GitHub issue** is opened. Turn on notifications in the GitHub app (Watch → All activity) and it reaches your phone |
+| Run it now | Actions → Daily trade card → **Run workflow** (capital defaults to ₹5,00,000) |
+| Upcoming events that block trades | [`toolkit/events.csv`](toolkit/events.csv): add RBI, Budget and election dates here |
+| Holidays (used when NSE's expiry list is unavailable) | `HOLIDAYS` in [`toolkit/marketdata.py`](toolkit/marketdata.py) |
+
+**Data sources, tried in order:**
+
+1. **Spot, VIX, history:** Yahoo Finance (`^NSEI`, `^INDIAVIX`); NSE `allIndices` as fallback for VIX.
+2. **Option chain:** NSE live API (`option-chain-v3`, best bid/ask + OI) → NSE F&O
+   **bhavcopy** (previous day's close, IVs re-priced at today's spot) → Black-Scholes
+   model on VIX. The card states which one was used.
+3. **Expiry dates:** NSE contract info → computed (Tuesday, holiday-adjusted).
+
+**Rules the card applies:** market open · IVP ≥ 30 · no listed event before the exit
+day · trend picks the structure (DOWN → bear call, UP → bull put only if VIX isn't
+rising, RANGE → iron condor only if VIX is calming) · gap against the trade ≤ 0.7% ·
+credit/width ≥ 0.25 · short delta ≤ 0.30 · bid-ask ≤ 10% of mid · net credit ≥ 4× costs ·
+max loss ≤ 2% of capital. It checks short strikes from 0.25 to 0.30 delta and picks
+the furthest-OTM one that passes. Every TRADE card includes the exact strikes, the
+take-profit, stop and time-exit levels, and the order sequence (hedge first).
+
+**First live run (29 Sep 2026, 13:35 IST):** NIFTY 22,653, VIX 14.06, **IVP 69**,
+trend **DOWN**, 20-day realised vol 10.2% vs implied 14.3% (sellers are being paid
+~4 vol pts). Best bear call spread, 23,000/23,100 CE for 6 Oct: bid/ask 65.70/65.95 and
+43.05/43.15, credit **22.7 pts → credit/width 0.23** → **NO TRADE**. The automation
+agrees with the manual analysis below.
+
+**What the automation does not do:** it doesn't place orders. You place them in your
+broker app, and you still act on the exits (set GTT/alerts at the levels on the card).
+GitHub's scheduler can start a few minutes late.
 
 ---
 
@@ -211,6 +255,12 @@ Risk per trade = **max loss**, capped at **2% of capital**. Margin used stays at
 **≤ 50% of capital**. Total risk across all open short-vol positions stays at **≤ 6%
 of capital**: NIFTY, BANKNIFTY and your stock calls all move together in a crash.
 
+**Your plan at ₹5 lakh:** 2% risk = **₹10,000 per trade**, 6% = **₹30,000 across all open
+positions**, margin used ≤ ₹2.5 lakh. That means **1 lot** of a 100-pt NIFTY bear call or bull put
+spread (max loss ~₹5,100), or up to **2 lots** of an iron condor (max loss ~₹4,200-4,500/lot,
+since only one side can lose). Keep the unused ~₹4.8 lakh in a liquid fund or pledged ETF
+for margin. Never add lots to "make back" a loss.
+
 For the bear call spread (max loss ≈ ₹5,100/lot):
 
 | Capital | 2% risk budget | Lots | Worst-case loss | Profit at 50% target |
@@ -270,7 +320,7 @@ carry forward 8 years if you file on time (ITR-3). For the tax-audit threshold,
 ## 13. Toolkit (`toolkit/`)
 
 ```bash
-pip install numpy pandas scipy
+pip install -r requirements.txt
 cd toolkit
 python3 validate.py                        # self-tests for the pricing maths
 
@@ -286,7 +336,9 @@ python3 sweep.py 22600 14.5 6.2            # credit/width vs short-delta table
 python3 regime.py --vix-csv vix.csv --nifty-csv nifty.csv   # IVP, trend, IV-RV
 ```
 
-### Run it on GitHub (no install, works from phone)
+The fully automatic version is `auto.py` (section 0): `python3 auto.py --capital 500000`.
+
+### Manual planner on GitHub (what-if scenarios)
 
 1. Open the repo on GitHub → **Actions** tab → **Option planner** → **Run workflow**.
 2. Enter live **NIFTY spot**, **India VIX**, **expiry**, your **capital**. Leave the
@@ -302,10 +354,9 @@ breakevens, stop level and lot count. Without `--chain`, prices come from a mode
 (Black-Scholes on a skewed surface anchored on VIX). They are planning estimates,
 not quotes.
 
-**Limitations:** no live NSE data was available when this was prepared (the sandbox
-blocks NSE and Yahoo), so spot, VIX, IVP and premiums are estimates from published
-news figures and a pricing model. **No historical backtest** was run for the same
-reason. Before scaling beyond 1 lot, backtest on NSE F&O bhavcopy data, including
+**Limitations:** sections 2-9 were written from published news figures and a pricing
+model. The automated card (section 0) uses live data and supersedes them. **No
+historical backtest** has been run yet. Before scaling beyond 1 lot, backtest on NSE F&O bhavcopy data, including
 the March 2020 and 4 June 2024 stress periods.
 
 ---
