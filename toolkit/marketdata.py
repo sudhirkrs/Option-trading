@@ -128,6 +128,8 @@ class NSE:
         if not (j and j.get("records", {}).get("data")):
             return None, None
         rows = []
+        sample = next((d for d in j["records"]["data"] if d.get("CE")), {})
+        log(f"NSE chain row keys: {sorted(sample.keys())}; CE keys: {sorted(sample.get('CE', {}).keys())}")
         for d in j["records"]["data"]:
             e = d.get("expiryDate") or d.get("expiryDates")
             if e and e != exp_s:
