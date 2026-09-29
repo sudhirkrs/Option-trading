@@ -170,6 +170,8 @@ def main():
     t0 = datetime.strptime(a.entry, "%Y-%m-%d %H:%M")
     t1 = datetime.strptime(a.expiry + " 15:30", "%Y-%m-%d %H:%M")
     days = (t1 - t0).total_seconds() / 86400
+    if days <= 0:
+        ap.error(f"expiry {a.expiry} 15:30 is not after entry {a.entry}")
     T = days / 365.0
     chain = load_chain(a.chain) if a.chain else None
     p = Pricer(a.spot, iv, T, chain)

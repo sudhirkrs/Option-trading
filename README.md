@@ -286,6 +286,17 @@ python3 sweep.py 22600 14.5 6.2            # credit/width vs short-delta table
 python3 regime.py --vix-csv vix.csv --nifty-csv nifty.csv   # IVP, trend, IV-RV
 ```
 
+### Run it on GitHub (no install, works from phone)
+
+1. Open the repo on GitHub → **Actions** tab → **Option planner** → **Run workflow**.
+2. Enter live **NIFTY spot**, **India VIX**, **expiry**, your **capital**. Leave the
+   entry time blank to use the current IST time.
+3. Click **Run workflow** and open the run when it finishes (~1 min). The strike
+   tables are on the run's **Summary** page.
+
+To use real broker quotes: commit the chain CSV (`strike,type,bid,ask`) to the repo,
+e.g. `chains/2026-09-30.csv`, and enter that path in **chain_file**.
+
 `planner.py` prints strikes, credit/width, P(OTM), P(touch), costs, margin estimate,
 breakevens, stop level and lot count. Without `--chain`, prices come from a model
 (Black-Scholes on a skewed surface anchored on VIX). They are planning estimates,

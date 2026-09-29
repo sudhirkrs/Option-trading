@@ -8,7 +8,7 @@ from costs import round_trip
 S, iv, days = float(sys.argv[1]), float(sys.argv[2]) / 100, float(sys.argv[3])
 p = Pricer(S, iv, days / 365)
 lot = 65
-print(f"{'side':<5}{'short':>7}{'delta':>7}{'width':>6}{'credit':>8}{'c/w':>6}{'P(max loss)':>12}{"cost drag/lot*":>17}")
+print(f"{'side':<5}{'short':>7}{'delta':>7}{'width':>6}{'credit':>8}{'c/w':>6}{'P(max loss)':>12}{'cost drag/lot*':>17}")
 for opt in ("CE", "PE"):
     for d in (0.35, 0.30, 0.25, 0.20, 0.15):
         Ks = p.strike_for_delta(d, opt)
