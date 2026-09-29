@@ -132,6 +132,26 @@ def liquidity_ok(sides, meta, mode):
     return (not bad), ("OK" if not bad else "; ".join(bad))
 
 
+def oi_wall(meta, opt, spot, em):
+    """Strike with the largest open interest on the OTM side, within 2 SD."""
+    pool = [(K, q["oi"]) for (K, o), q in meta.items()
+            if o == opt and q.get("oi") and
+            (spot < K <= spot + 2 * em if opt == "CE" else spot - 2 * em <= K < spot)]
+    return max(pool, key=lambda x: (x[1], -abs(x[0] - spot))) if pool else None
+
+
+def beyond_wall(short, opt, wall):
+    """Short must sit strictly beyond the wall (not at it)."""
+    if wall is None:
+        return True
+    return short > wall[0] if opt == "CE" else short < wall[0]
+
+
+def in_window(now, window):
+    start, end = [datetime.strptime(x, "%H:%M").time() for x in window.split("-")]
+    return start <= now.time() <= end
+
+
 # ------------------------------------------------------------------ main
 
 def main():
@@ -145,6 +165,7 @@ def main():
     ap.add_argument("--widths", default="100,150")
     ap.add_argument("--min-credit-ratio", type=float, default=0.25)
     ap.add_argument("--max-gap", type=float, default=0.7, help="skip if gap against the trade > this %%")
+    ap.add_argument("--entry-window", default="10:00-11:30", help="IST window for new entries")
     ap.add_argument("--report-dir", default="")
     a = ap.parse_args()
 
@@ -202,6 +223,7 @@ def main():
     rg = regime(nifty, vix, spot, vix_now, today)
     exit_day = md.prev_trading_day(expiry)
     events = [(d, e) for d, e in load_events() if today <= d <= expiry]
+    walls = {o: oi_wall(meta, o, spot, em) for o in ("CE", "PE")}
 
     # ---- data section
     L.append("\n## Data")
@@ -224,6 +246,8 @@ def main():
              f" (5-day high {fmt(rg['vix_5d_high'], '.2f')})")
     L.append(f"* Today's opening gap: {fmt(rg['gap'], '+.2f')}{'%' if rg['gap'] is not None else ''}")
     L.append(f"* Events up to expiry: {', '.join(f'{d:%d %b} {e}' for d, e in events) or 'none listed'}")
+    L.append("* OI walls (largest OI within 2 SD): " + (" · ".join(
+        f"{o} {w[0]} ({w[1]:,.0f})" for o, w in walls.items() if w) or "n/a (no OI data)"))
 
     # ---- decide structure
     reasons, structure = [], None
@@ -254,9 +278,11 @@ def main():
 
     def best(opt, target):
         """Furthest-OTM spread (short delta up to 0.30) that meets the credit/width
-        minimum; falls back to the plain delta target when none does."""
-        tries = [spread(p, opt, d, widths) for d in sorted({min(target, 0.30), 0.25, 0.28, 0.30})]
+        minimum, preferring shorts beyond the OI wall; falls back to the plain
+        delta target when none qualifies."""
+        tries = [spread(p, opt, d, widths) for d in sorted({min(target, 0.30), 0.15, 0.18, 0.20, 0.22, 0.25, 0.28, 0.30})]
         ok = [s for s in tries if s["ratio"] >= a.min_credit_ratio]
+        ok = [s for s in ok if beyond_wall(s["short"], opt, walls[opt])] or ok
         if ok:
             return min(ok, key=lambda s: abs(p.delta(s["short"], opt)))
         return spread(p, opt, target, widths)
@@ -284,6 +310,12 @@ def main():
             (all(abs(p.delta(s["short"], s["opt"])) <= 0.30 for s in sides), "short delta ≤ 0.30"),
             (m["cost_ok"], f"cost ₹{m['cost']:,.0f} = {m['cost']/m['gross']*100:.1f}% of credit (net ≥ 4× cost)"),
             (liq_ok, f"liquidity: {liq}"),
+            (all(beyond_wall(s["short"], s["opt"], walls[s["opt"]]) for s in sides),
+             "OI wall: " + "; ".join(
+                 f"short {s['short']}{s['opt']} is "
+                 + ("beyond" if beyond_wall(s["short"], s["opt"], walls[s["opt"]]) else "at/inside")
+                 + f" the {walls[s['opt']][0]} wall ({walls[s['opt']][1]:,.0f} OI)"
+                 if walls[s["opt"]] else f"{s['opt']} not checked (no OI data)" for s in sides)),
             (m["lots"] >= 1, f"size: {m['lots']} lot(s) within {a.risk_pct:.0f}% risk (₹{a.capital*risk:,.0f}), cap {a.max_lots}"),
         ]
         out += [f"* {'✅' if ok else '❌'} {txt}" for ok, txt in checks]
@@ -299,15 +331,23 @@ def main():
         reasons.append(f"{structure} failed a gate (see ❌ below)")
 
     L.append("\n## Verdict")
-    if not reasons:
+    window_ok = in_window(now, a.entry_window)
+    window_note = (f"⚠️ It is {now:%H:%M} IST, outside the {a.entry_window} entry window. "
+                   "Don't open a new position now; wait for the next scheduled card.")
+    if not reasons and window_ok:
         L.append(f"**TRADE: {structure}, {m['lots']} lot(s)** "
                  + ("(prices are live)" if mode == "LIVE" else
                     "(**confirm live**: place only if the live credit/width is ≥ "
                     f"{a.min_credit_ratio})"))
         L.append("Order: buy the hedge leg first, then sell the short leg, both as limit orders at mid.")
+    elif not reasons:
+        L.append(f"**TRADE SIGNAL (outside entry window), not actionable now: {structure}**")
+        L.append(window_note)
     else:
         L.append("**NO TRADE today.**")
         L += [f"* {r}" for r in reasons]
+        if md.is_trading_day(today) and not window_ok:
+            L.append(window_note)
     L += body
     L.append("\n<details><summary>Other structures (for reference only)</summary>\n")
     for name, sides in cands.items():

@@ -5,7 +5,7 @@ Every structure here is **defined-risk**: each short option is paired with a lon
 option, or with stock you already own, so the worst-case loss is known before entry.
 There is no naked selling anywhere in this plan. Sized for **₹5 lakh** capital.
 
-**It runs by itself.** Every weekday at ~10:05 and ~11:35 IST, a GitHub Action
+**It runs by itself.** Every weekday at ~10:05 and ~11:05 IST, a GitHub Action
 fetches live NIFTY spot, India VIX, 1-year history (Yahoo Finance) and the live
 option chain (NSE), applies every rule in this playbook, and publishes a
 **TRADE / NO TRADE** card. See [section 0](#0-automation-daily-trade-card).
@@ -38,8 +38,11 @@ option chain (NSE), applies every rule in this playbook, and publishes a
 day · trend picks the structure (DOWN → bear call, UP → bull put only if VIX isn't
 rising, RANGE → iron condor only if VIX is calming) · gap against the trade ≤ 0.7% ·
 credit/width ≥ 0.25 · short delta ≤ 0.30 · bid-ask ≤ 10% of mid · net credit ≥ 4× costs ·
-max loss ≤ 2% of capital. It checks short strikes from 0.25 to 0.30 delta and picks
-the furthest-OTM one that passes. Every TRADE card includes the exact strikes, the
+max loss ≤ 2% of capital · **short strike beyond the OI wall** (the strike with the
+largest open interest on that side, within 2 SD; not at it) · run time inside the
+**10:00-11:30 IST entry window**. It checks short strikes from 0.15 to 0.30 delta and picks
+the furthest-OTM one that passes. A run outside the window (e.g. you trigger it at 14:00)
+says **TRADE SIGNAL (outside entry window), not actionable now** and opens no issue. Every TRADE card includes the exact strikes, the
 take-profit, stop and time-exit levels, and the order sequence (hedge first).
 
 **First live run (29 Sep 2026, 13:35 IST):** NIFTY 22,653, VIX 14.06, **IVP 69**,
@@ -183,7 +186,7 @@ Economics per lot (65 qty):
 |---|---|
 | Spread value falls to 50% of the credit you received (e.g. 25 → 12.5) | Close, and take the win |
 | Spread value reaches **3× credit** (i.e. loss = 2× credit, ~67 pts) | Close. No averaging, no rolling |
-| NIFTY trades above the short strike | Close (P(touch) says this happens ~50% of the time; that's why size is small) |
+| NIFTY trades above the short strike | **Don't** close on that alone (it happens ~50% of the time); the spread-value stop above decides |
 | **Mon 5 Oct, 15:00** | Close whatever is left. Don't carry it into expiry day or into RBI |
 
 **What kills this trade:** a sharp short-covering rally. Oversold markets bounce
