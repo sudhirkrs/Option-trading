@@ -22,7 +22,7 @@ option chain (NSE), applies every rule in this playbook, and publishes a
 | Each run's card | GitHub → **Actions** → **Daily trade card** → the run → **Summary** |
 | History of every card | [`reports/`](reports/) folder (one Markdown file per run) |
 | Alert when it says TRADE | A new **GitHub issue** is opened. Turn on notifications in the GitHub app (Watch → All activity) and it reaches your phone |
-| Run it now | Actions → Daily trade card → **Run workflow** (capital defaults to ₹5,00,000) |
+| Run it now | Actions → Daily trade card → **Run workflow** (capital ₹5,00,000, **max 1 lot** by default; raise `max_lots` after 8-10 logged trades) |
 | Upcoming events that block trades | [`toolkit/events.csv`](toolkit/events.csv): add RBI, Budget and election dates here |
 | Holidays (used when NSE's expiry list is unavailable) | `HOLIDAYS` in [`toolkit/marketdata.py`](toolkit/marketdata.py) |
 

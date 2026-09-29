@@ -138,6 +138,7 @@ def main():
     ap = argparse.ArgumentParser()
     ap.add_argument("--capital", type=float, default=500000)
     ap.add_argument("--risk-pct", type=float, default=2.0)
+    ap.add_argument("--max-lots", type=int, default=1, help="hard cap (1 for the first 8-10 trades)")
     ap.add_argument("--expiry", default="", help="YYYY-MM-DD; blank = nearest valid weekly")
     ap.add_argument("--directional-delta", type=float, default=0.28)
     ap.add_argument("--neutral-delta", type=float, default=0.22)
@@ -268,6 +269,7 @@ def main():
 
     def card(name, sides):
         m = metrics(p, sides, LOT, a.capital, risk)
+        m["lots"] = min(m["lots"], a.max_lots)
         out = [f"\n### {name}", "| Leg | Strike | Price | Bid/Ask | IV | Delta | P(OTM) | P(touch) | OI |",
                "|---|---|---|---|---|---|---|---|---|"]
         for s in sides:
@@ -282,7 +284,7 @@ def main():
             (all(abs(p.delta(s["short"], s["opt"])) <= 0.30 for s in sides), "short delta ≤ 0.30"),
             (m["cost_ok"], f"cost ₹{m['cost']:,.0f} = {m['cost']/m['gross']*100:.1f}% of credit (net ≥ 4× cost)"),
             (liq_ok, f"liquidity: {liq}"),
-            (m["lots"] >= 1, f"size: {m['lots']} lot(s) within {a.risk_pct:.0f}% risk (₹{a.capital*risk:,.0f})"),
+            (m["lots"] >= 1, f"size: {m['lots']} lot(s) within {a.risk_pct:.0f}% risk (₹{a.capital*risk:,.0f}), cap {a.max_lots}"),
         ]
         out += [f"* {'✅' if ok else '❌'} {txt}" for ok, txt in checks]
         c = m["credit"]

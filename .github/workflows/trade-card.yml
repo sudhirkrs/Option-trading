@@ -21,6 +21,9 @@ on:
       expiry:
         description: "Expiry YYYY-MM-DD (blank = nearest valid weekly)"
         default: ""
+      max_lots:
+        description: "Max lots per trade (keep 1 for the first 8-10 trades)"
+        default: "1"
 
 permissions:
   contents: write
@@ -47,10 +50,11 @@ jobs:
           CAPITAL: ${{ inputs.capital || '500000' }}
           RISK: ${{ inputs.risk_pct || '2' }}
           EXPIRY: ${{ inputs.expiry || '' }}
+          MAX_LOTS: ${{ inputs.max_lots || '1' }}
         run: |
           set -o pipefail
           python3 validate.py
-          python3 auto.py --capital "$CAPITAL" --risk-pct "$RISK" --expiry "$EXPIRY" \
+          python3 auto.py --capital "$CAPITAL" --risk-pct "$RISK" --expiry "$EXPIRY" --max-lots "$MAX_LOTS" \
             --report-dir ../reports | tee card.md
           cat card.md >> "$GITHUB_STEP_SUMMARY"
       - name: Save report
