@@ -29,10 +29,15 @@ DISCLAIMER = ("Estimates for analysis. Verify lot size, expiry, margin and charg
 
 
 class Pricer:
-    def __init__(self, spot, atm_iv, T, chain=None):
+    def __init__(self, spot, atm_iv, T, chain=None, iv_map=None):
+        """chain: {(strike, opt): live mid}; iv_map: {(strike, opt): iv} solved
+        from an earlier snapshot (e.g. bhavcopy), re-priced at today's spot."""
         self.S, self.atm, self.T, self.chain = spot, atm_iv, T, chain or {}
+        self.iv_map = iv_map or {}
 
     def iv(self, K, opt):
+        if (K, opt) in self.iv_map:
+            return self.iv_map[(K, opt)]
         quote = self.chain.get((K, opt))
         if quote:
             v = implied_vol(quote, self.S, K, self.T, R, opt)
@@ -92,7 +97,8 @@ def leg_stats(p, K, opt):
                 p_touch=prob_touch(p.S, K, p.T, R, iv))
 
 
-def evaluate(name, p, sides, lot, capital, risk_pct, em):
+def metrics(p, sides, lot, capital, risk_pct):
+    """Per-lot economics and sizing for a set of credit-spread sides."""
     legs, credit, width = [], 0.0, 0.0
     for s in sides:
         legs += [(s["opt"], s["short"], -1, p.price(s["short"], s["opt"])),
@@ -108,6 +114,16 @@ def evaluate(name, p, sides, lot, capital, risk_pct, em):
     lots_risk = int((capital * risk_pct) // max_loss) if max_loss > 0 else 0
     lots_margin = int((capital * 0.5) // margin)
     lots = max(0, min(lots_risk, lots_margin))
+    return dict(legs=legs, credit=credit, width=width, cost=cost, gross=gross,
+                max_loss=max_loss, margin=margin, lots=lots, lots_risk=lots_risk,
+                lots_margin=lots_margin, net_target=gross * 0.5 - cost,
+                cost_ok=gross - cost >= 4 * cost)
+
+
+def evaluate(name, p, sides, lot, capital, risk_pct, em):
+    m = metrics(p, sides, lot, capital, risk_pct)
+    credit, cost, gross, max_loss, margin = m["credit"], m["cost"], m["gross"], m["max_loss"], m["margin"]
+    lots, lots_risk, lots_margin = m["lots"], m["lots_risk"], m["lots_margin"]
 
     out = [f"\n=== {name} ==="]
     out.append(f"{'leg':<12}{'IV%':>6}{'prem':>8}{'delta':>8}{'P(OTM)':>8}{'P(touch)':>9}{'dist':>8}")
@@ -127,8 +143,7 @@ def evaluate(name, p, sides, lot, capital, risk_pct, em):
         flags.append(f"{s['opt']} spread {s['width']} wide: credit {s['credit']:.1f} "
                      f"-> credit/width {s['ratio']:.2f} [{verdict}]")
     out += ["  " + f for f in flags]
-    net_at_target = gross * 0.5 - cost
-    cost_ok = gross - cost >= 4 * cost
+    net_at_target, cost_ok = m["net_target"], m["cost_ok"]
     out.append(f"  Gross credit/lot  Rs{gross:,.0f}   round-trip cost (exit at 50%) Rs{cost:,.0f}"
                f" = {cost/gross*100:.1f}% of credit  [{'PASS' if cost_ok else 'FAIL'} 4x cost gate]")
     out.append(f"  Net profit at 50% target/lot  Rs{net_at_target:,.0f}")
