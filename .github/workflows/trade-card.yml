@@ -8,8 +8,11 @@ name: Daily trade card
 #  - A GitHub issue is opened when the verdict is TRADE (GitHub app notifies you).
 on:
   schedule:
-    - cron: "35 4 * * 1-5"   # 10:05 IST, Mon-Fri (GitHub may start it a few minutes late)
-    - cron: "35 5 * * 1-5"   # 11:05 IST second look (inside the 10:00-11:30 entry window)
+    # Three chances inside the 10:00-11:30 IST entry window: GitHub delays or drops
+    # scheduled runs under load, so one slot alone is not reliable.
+    - cron: "35 4 * * 1-5"   # 10:05 IST, Mon-Fri
+    - cron: "7 5 * * 1-5"    # 10:37 IST
+    - cron: "35 5 * * 1-5"   # 11:05 IST
   workflow_dispatch:
     inputs:
       capital:
@@ -64,11 +67,25 @@ jobs:
           git add reports
           git commit -qm "Trade card $(TZ=Asia/Kolkata date '+%Y-%m-%d %H:%M') IST" || exit 0
           git pull -q --rebase && git push -q
-      - name: Notify on TRADE
+      - name: Notify
         env:
           GH_TOKEN: ${{ github.token }}
+          RUN_URL: ${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}
         run: |
+          # Every run comments on one "Daily trade cards" issue, so each card
+          # (TRADE or NO TRADE) reaches the GitHub app; a TRADE also gets its own issue.
+          stamp="$(TZ=Asia/Kolkata date '+%a %d %b %H:%M') IST"
+          verdict="$(grep -m1 '^\*\*' toolkit/card.md | tr -d '*')"
+          { echo "### $stamp: $verdict"; echo; echo "[Full run]($RUN_URL)"; echo
+            sed '/^<details>/,$d' toolkit/card.md | sed '1d'; } > comment.md
+          num="$(gh issue list --state open --search 'Daily trade cards in:title' --json number,title \
+                 --jq '.[] | select(.title == "Daily trade cards") | .number' | head -1)"
+          if [ -z "$num" ]; then
+            num="$(gh issue create --title "Daily trade cards" \
+                   --body "Every trade-card run posts here. Subscribe to this issue to get each card on your phone." \
+                   | grep -o '[0-9]*$')"
+          fi
+          gh issue comment "$num" --body-file comment.md
           if grep -q '^\*\*TRADE:' toolkit/card.md; then
-            title="$(grep -m1 '^\*\*TRADE:' toolkit/card.md | tr -d '*') - $(TZ=Asia/Kolkata date '+%d %b %H:%M') IST"
-            gh issue create --title "$title" --body-file toolkit/card.md
+            gh issue create --title "$verdict - $stamp" --body-file toolkit/card.md
           fi

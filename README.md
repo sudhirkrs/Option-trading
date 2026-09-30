@@ -5,7 +5,7 @@ Every structure here is **defined-risk**: each short option is paired with a lon
 option, or with stock you already own, so the worst-case loss is known before entry.
 There is no naked selling anywhere in this plan. Sized for **₹5 lakh** capital.
 
-**It runs by itself.** Every weekday at ~10:05 and ~11:05 IST, a GitHub Action
+**It runs by itself.** Every weekday at ~10:05, ~10:37 and ~11:05 IST, a GitHub Action
 fetches live NIFTY spot, India VIX, 1-year history (Yahoo Finance) and the live
 option chain (NSE), applies every rule in this playbook, and publishes a
 **TRADE / NO TRADE** card. See [section 0](#0-automation-daily-trade-card).
@@ -21,7 +21,9 @@ option chain (NSE), applies every rule in this playbook, and publishes a
 |---|---|
 | Each run's card | GitHub → **Actions** → **Daily trade card** → the run → **Summary** |
 | History of every card | [`reports/`](reports/) folder (one Markdown file per run) |
-| Alert when it says TRADE | A new **GitHub issue** is opened. Turn on notifications in the GitHub app (Watch → All activity) and it reaches your phone |
+| Every card on your phone | Each run comments on the issue **Daily trade cards**. Open it in the GitHub app and tap **Subscribe**. A silent day now means the run didn't happen, not that it said NO TRADE |
+| Alert when it says TRADE | A separate **GitHub issue** titled `TRADE: ...` is also opened |
+| If no card by 10:45 IST | GitHub sometimes delays or drops scheduled runs. Run it yourself: Actions → Daily trade card → **Run workflow** |
 | Run it now | Actions → Daily trade card → **Run workflow** (capital ₹5,00,000, **max 1 lot** by default; raise `max_lots` after 8-10 logged trades) |
 | Upcoming events that block trades | [`toolkit/events.csv`](toolkit/events.csv): add RBI, Budget and election dates here |
 | Holidays (used when NSE's expiry list is unavailable) | `HOLIDAYS` in [`toolkit/marketdata.py`](toolkit/marketdata.py) |
