@@ -5,7 +5,7 @@ Every structure here is **defined-risk**: each short option is paired with a lon
 option, or with stock you already own, so the worst-case loss is known before entry.
 There is no naked selling anywhere in this plan. Sized for **₹5 lakh** capital.
 
-**It runs by itself.** Every weekday at 10:05 and 11:05 IST (started by a Claude routine; GitHub's own scheduler at 10:37 IST is only a backup because it has run hours late), a GitHub Action
+**It runs by itself.** Every weekday GitHub's scheduler tries at ~10:07, ~10:37 and ~11:07 IST (it can be late or skip; a late run posts nothing, so if there's no card by 11:00, run it by hand), a GitHub Action
 fetches live NIFTY spot, India VIX, 1-year history (Yahoo Finance) and the live
 option chain (NSE), applies every rule in this playbook, and publishes a
 **TRADE / NO TRADE** card. See [section 0](#0-automation-daily-trade-card).
@@ -58,41 +58,13 @@ agrees with the manual analysis below.
 broker app, and you still act on the exits (set GTT/alerts at the levels on the card).
 GitHub's scheduler can start a few minutes late.
 
-### 0.1 Reliable start times with cron-job.org (free, no Claude needed)
+### 0.1 If the scheduled card doesn't appear
 
-GitHub's own scheduler has started these runs hours late, so an outside timer calls
-GitHub's "run workflow" API at 10:05 and 11:05 IST. One-time setup, about 10 minutes.
+GitHub's scheduler is best-effort: runs can start late or not at all. Check issue #3
+at about 11:00 IST. If there's no card for today, run it yourself: **Actions → Daily
+trade card → Run workflow** (defaults are fine). It posts to #3 in about 40 seconds.
 
-**Step 1: create a GitHub token that can only start Actions on this repo**
-
-1. On github.com (a phone browser works): profile picture → **Settings** →
-   **Developer settings** (bottom of the left menu) → **Personal access tokens** →
-   **Fine-grained tokens** → **Generate new token**.
-2. **Token name:** `cron-job trade card`. **Expiration:** 1 year (put a calendar
-   reminder to renew it).
-3. **Repository access:** *Only select repositories* → `sudhirkrs/Option-trading`.
-4. **Permissions → Repository permissions → Actions:** **Read and write**. Leave
-   everything else as is (*Metadata: Read-only* is added automatically).
-5. **Generate token** and copy it (starts with `github_pat_`). GitHub shows it only
-   once. Don't paste it anywhere except cron-job.org, not even in this repo or a chat.
-
-**Step 2: create the 10:05 job on cron-job.org**
-
-1. Sign up at **https://cron-job.org** (free) and confirm your email.
-2. **Settings** (account) → **Time zone:** `Asia/Kolkata`.
-3. **Cronjobs → Create cronjob**:
-   * **Title:** `NIFTY trade card 10:05`
-   * **URL:**
-     `https://api.github.com/repos/sudhirkrs/Option-trading/actions/workflows/trade-card.yml/dispatches`
-   * **Execution schedule → Custom:** Days of month *every day*, Days of week
-     **Mon–Fri**, Months *every month*, Hours **10**, Minutes **5**.
-   * **Notify me when:** execution fails (so you get an email if it breaks).
-4. Open the **Advanced** tab:
-   * **Request method:** `POST`
-   * **Headers** (add four):
-
-     | Key | Value |
-     |---|---|
+---|---|
      | `Accept` | `application/vnd.github+json` |
      | `Authorization` | `Bearer github_pat_...` (your token from step 1) |
      | `X-GitHub-Api-Version` | `2022-11-28` |

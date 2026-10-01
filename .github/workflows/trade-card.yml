@@ -8,10 +8,12 @@ name: Daily trade card
 #  - A GitHub issue is opened when the verdict is TRADE (GitHub app notifies you).
 on:
   schedule:
-    # Primary trigger is a Claude routine (workflow_dispatch at 10:05 and 11:05 IST).
-    # This GitHub cron is only a backup: GitHub has started these hours late, so a
-    # scheduled run that lands outside the 10:00-11:30 IST window exits without posting.
+    # Three chances inside the 10:00-11:30 IST entry window. GitHub can start scheduled
+    # runs late or skip them; a run that starts outside the window exits without posting.
+    # If no card has appeared by ~11:00 IST, run it by hand (Actions -> Run workflow).
+    - cron: "37 4 * * 1-5"   # 10:07 IST
     - cron: "7 5 * * 1-5"    # 10:37 IST
+    - cron: "37 5 * * 1-5"   # 11:07 IST
   workflow_dispatch:
     inputs:
       capital:
