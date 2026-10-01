@@ -5,7 +5,7 @@ Every structure here is **defined-risk**: each short option is paired with a lon
 option, or with stock you already own, so the worst-case loss is known before entry.
 There is no naked selling anywhere in this plan. Sized for **₹5 lakh** capital.
 
-**It runs by itself.** Every weekday at ~10:05, ~10:37 and ~11:05 IST, a GitHub Action
+**It runs by itself.** Every weekday at 10:05 and 11:05 IST (started by a Claude routine; GitHub's own scheduler at 10:37 IST is only a backup because it has run hours late), a GitHub Action
 fetches live NIFTY spot, India VIX, 1-year history (Yahoo Finance) and the live
 option chain (NSE), applies every rule in this playbook, and publishes a
 **TRADE / NO TRADE** card. See [section 0](#0-automation-daily-trade-card).

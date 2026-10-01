@@ -8,11 +8,10 @@ name: Daily trade card
 #  - A GitHub issue is opened when the verdict is TRADE (GitHub app notifies you).
 on:
   schedule:
-    # Three chances inside the 10:00-11:30 IST entry window: GitHub delays or drops
-    # scheduled runs under load, so one slot alone is not reliable.
-    - cron: "35 4 * * 1-5"   # 10:05 IST, Mon-Fri
+    # Primary trigger is a Claude routine (workflow_dispatch at 10:05 and 11:05 IST).
+    # This GitHub cron is only a backup: GitHub has started these hours late, so a
+    # scheduled run that lands outside the 10:00-11:30 IST window exits without posting.
     - cron: "7 5 * * 1-5"    # 10:37 IST
-    - cron: "35 5 * * 1-5"   # 11:05 IST
   workflow_dispatch:
     inputs:
       capital:
@@ -40,14 +39,26 @@ jobs:
   card:
     runs-on: ubuntu-latest
     steps:
+      - name: Skip late scheduled runs
+        id: win
+        run: |
+          now=$(TZ=Asia/Kolkata date +%H%M)
+          if [ "${{ github.event_name }}" = "schedule" ] && { [ "$now" -lt 1000 ] || [ "$now" -gt 1130 ]; }; then
+            echo "Scheduled run started at $now IST, outside 10:00-11:30; skipping."
+            echo "skip=true" >> "$GITHUB_OUTPUT"
+          fi
       - uses: actions/checkout@v5
+        if: steps.win.outputs.skip != 'true'
       - uses: actions/setup-python@v6
+        if: steps.win.outputs.skip != 'true'
         with:
           python-version: "3.12"
           cache: pip
           cache-dependency-path: toolkit/requirements.txt
       - run: pip install -r toolkit/requirements.txt
+        if: steps.win.outputs.skip != 'true'
       - name: Build trade card
+        if: steps.win.outputs.skip != 'true'
         working-directory: toolkit
         env:
           CAPITAL: ${{ inputs.capital || '500000' }}
@@ -61,6 +72,7 @@ jobs:
             --report-dir ../reports | tee card.md
           cat card.md >> "$GITHUB_STEP_SUMMARY"
       - name: Save report
+        if: steps.win.outputs.skip != 'true'
         run: |
           git config user.name "github-actions[bot]"
           git config user.email "41898333+github-actions[bot]@users.noreply.github.com"
@@ -68,6 +80,7 @@ jobs:
           git commit -qm "Trade card $(TZ=Asia/Kolkata date '+%Y-%m-%d %H:%M') IST" || exit 0
           git pull -q --rebase && git push -q
       - name: Notify
+        if: steps.win.outputs.skip != 'true'
         env:
           GH_TOKEN: ${{ github.token }}
           RUN_URL: ${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}
