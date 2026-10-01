@@ -20,7 +20,8 @@ option chain (NSE), applies every rule in this playbook, and publishes a
 | What | Where |
 |---|---|
 | Each run's card | GitHub → **Actions** → **Daily trade card** → the run → **Summary** |
-| History of every card | [`reports/`](reports/) folder (one Markdown file per run) |
+| Latest card | Top of issue **#3 "Daily trade cards"** (always replaced with the newest card), or [`reports/LATEST.md`](reports/LATEST.md) |
+| History of every card | Comments on #3 (oldest first) and the [`reports/`](reports/) folder |
 | Every card on your phone | Each run comments on the issue **Daily trade cards**. Open it in the GitHub app and tap **Subscribe**. A silent day now means the run didn't happen, not that it said NO TRADE |
 | Alert when it says TRADE | A separate **GitHub issue** titled `TRADE: ...` is also opened |
 | If no card by 10:45 IST | GitHub sometimes delays or drops scheduled runs. Run it yourself: Actions → Daily trade card → **Run workflow** |

@@ -76,6 +76,7 @@ jobs:
         run: |
           git config user.name "github-actions[bot]"
           git config user.email "41898333+github-actions[bot]@users.noreply.github.com"
+          cp toolkit/card.md reports/LATEST.md
           git add reports
           git commit -qm "Trade card $(TZ=Asia/Kolkata date '+%Y-%m-%d %H:%M') IST" || exit 0
           git pull -q --rebase && git push -q
@@ -89,8 +90,12 @@ jobs:
           # (TRADE or NO TRADE) reaches the GitHub app; a TRADE also gets its own issue.
           stamp="$(TZ=Asia/Kolkata date '+%a %d %b %H:%M') IST"
           verdict="$(grep -m1 '^\*\*' toolkit/card.md | tr -d '*')"
-          { echo "### $stamp: $verdict"; echo; echo "[Full run]($RUN_URL)"; echo
-            sed '/^<details>/,$d' toolkit/card.md | sed '1d'; } > comment.md
+          { echo "### $stamp: $verdict"; echo; echo "@${{ github.repository_owner }}"; echo
+            sed '/^<details>/,$d' toolkit/card.md | sed '1d'; echo; echo "[Full run]($RUN_URL)"; } > comment.md
+          # The issue body always holds the latest card (comments below are the history).
+          { echo "## Latest card: $stamp"; echo; echo "**$verdict**"; echo
+            sed '/^<details>/,$d' toolkit/card.md | sed '1d'; echo; echo "---"
+            echo "Older cards are in the comments below (oldest first) and in the reports/ folder."; } > body.md
           num="$(gh issue list --state open --search 'Daily trade cards in:title' --json number,title \
                  --jq '.[] | select(.title == "Daily trade cards") | .number' | head -1)"
           if [ -z "$num" ]; then
@@ -98,6 +103,7 @@ jobs:
                    --body "Every trade-card run posts here. Subscribe to this issue to get each card on your phone." \
                    | grep -o '[0-9]*$')"
           fi
+          gh issue edit "$num" --body-file body.md
           gh issue comment "$num" --body-file comment.md
           if grep -q '^\*\*TRADE:' toolkit/card.md; then
             gh issue create --title "$verdict - $stamp" --body-file toolkit/card.md
