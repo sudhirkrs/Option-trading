@@ -26,6 +26,9 @@ on:
       max_lots:
         description: "Max lots per trade (keep 1 for the first 8-10 trades)"
         default: "1"
+      source:
+        description: "Who started this run (shown on the summary)"
+        default: "GitHub Actions page"
 
 permissions:
   contents: write
@@ -65,12 +68,13 @@ jobs:
           RISK: ${{ inputs.risk_pct || '2' }}
           EXPIRY: ${{ inputs.expiry || '' }}
           MAX_LOTS: ${{ inputs.max_lots || '1' }}
+          SOURCE: ${{ inputs.source || 'GitHub schedule' }}
         run: |
           set -o pipefail
           python3 validate.py
           python3 auto.py --capital "$CAPITAL" --risk-pct "$RISK" --expiry "$EXPIRY" --max-lots "$MAX_LOTS" \
             --report-dir ../reports | tee card.md
-          cat card.md >> "$GITHUB_STEP_SUMMARY"
+          { echo "_Started by: ${SOURCE}_"; echo; cat card.md; } >> "$GITHUB_STEP_SUMMARY"
       - name: Save report
         if: steps.win.outputs.skip != 'true'
         run: |

@@ -58,6 +58,69 @@ agrees with the manual analysis below.
 broker app, and you still act on the exits (set GTT/alerts at the levels on the card).
 GitHub's scheduler can start a few minutes late.
 
+### 0.1 Reliable start times with cron-job.org (free, no Claude needed)
+
+GitHub's own scheduler has started these runs hours late, so an outside timer calls
+GitHub's "run workflow" API at 10:05 and 11:05 IST. One-time setup, about 10 minutes.
+
+**Step 1: create a GitHub token that can only start Actions on this repo**
+
+1. On github.com (a phone browser works): profile picture → **Settings** →
+   **Developer settings** (bottom of the left menu) → **Personal access tokens** →
+   **Fine-grained tokens** → **Generate new token**.
+2. **Token name:** `cron-job trade card`. **Expiration:** 1 year (put a calendar
+   reminder to renew it).
+3. **Repository access:** *Only select repositories* → `sudhirkrs/Option-trading`.
+4. **Permissions → Repository permissions → Actions:** **Read and write**. Leave
+   everything else as is (*Metadata: Read-only* is added automatically).
+5. **Generate token** and copy it (starts with `github_pat_`). GitHub shows it only
+   once. Don't paste it anywhere except cron-job.org, not even in this repo or a chat.
+
+**Step 2: create the 10:05 job on cron-job.org**
+
+1. Sign up at **https://cron-job.org** (free) and confirm your email.
+2. **Settings** (account) → **Time zone:** `Asia/Kolkata`.
+3. **Cronjobs → Create cronjob**:
+   * **Title:** `NIFTY trade card 10:05`
+   * **URL:**
+     `https://api.github.com/repos/sudhirkrs/Option-trading/actions/workflows/trade-card.yml/dispatches`
+   * **Execution schedule → Custom:** Days of month *every day*, Days of week
+     **Mon–Fri**, Months *every month*, Hours **10**, Minutes **5**.
+   * **Notify me when:** execution fails (so you get an email if it breaks).
+4. Open the **Advanced** tab:
+   * **Request method:** `POST`
+   * **Headers** (add four):
+
+     | Key | Value |
+     |---|---|
+     | `Accept` | `application/vnd.github+json` |
+     | `Authorization` | `Bearer github_pat_...` (your token from step 1) |
+     | `X-GitHub-Api-Version` | `2022-11-28` |
+     | `Content-Type` | `application/json` |
+
+   * **Request body:**
+     ```json
+     {"ref":"claude/covered-option-selling-india-2gwtqy","inputs":{"capital":"500000","risk_pct":"2","expiry":"","max_lots":"1","source":"cron-job.org"}}
+     ```
+5. **Save**.
+
+**Step 3: the 11:05 job.** In the job list, use **Clone** (or create another the same
+way), change the title to `NIFTY trade card 11:05` and **Minutes** to stay `5` with
+**Hours** `11`. Save.
+
+**Step 4: test.** On the 10:05 job, press **Test run** (or *Execute now*). A correct
+setup returns **HTTP 204** (no content). Then GitHub → **Actions** shows a new
+*Daily trade card* run, and its summary says *Started by: cron-job.org*. Common errors:
+
+| Response | Meaning | Fix |
+|---|---|---|
+| 401 | Token wrong, expired or missing `Bearer ` | Re-copy the token into the `Authorization` header |
+| 403 | Token lacks Actions write, or wrong repo selected | Edit the token: repo = Option-trading, Actions = Read and write |
+| 404 | URL typo, or the token can't see the repo | Check the URL exactly; check the token's repository access |
+| 422 | Body wrong (branch name or inputs) | Paste the request body exactly as above |
+
+When the token expires, generate a new one the same way and replace it in both jobs.
+
 ---
 
 ## 1. TL;DR: what to do tomorrow
