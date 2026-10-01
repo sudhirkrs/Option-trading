@@ -56,42 +56,13 @@ agrees with the manual analysis below.
 
 **What the automation does not do:** it doesn't place orders. You place them in your
 broker app, and you still act on the exits (set GTT/alerts at the levels on the card).
-GitHub's scheduler can start a few minutes late.
+GitHub's scheduler can start late or skip a run (see 0.1).
 
 ### 0.1 If the scheduled card doesn't appear
 
 GitHub's scheduler is best-effort: runs can start late or not at all. Check issue #3
 at about 11:00 IST. If there's no card for today, run it yourself: **Actions → Daily
 trade card → Run workflow** (defaults are fine). It posts to #3 in about 40 seconds.
-
----|---|
-     | `Accept` | `application/vnd.github+json` |
-     | `Authorization` | `Bearer github_pat_...` (your token from step 1) |
-     | `X-GitHub-Api-Version` | `2022-11-28` |
-     | `Content-Type` | `application/json` |
-
-   * **Request body:**
-     ```json
-     {"ref":"claude/covered-option-selling-india-2gwtqy","inputs":{"capital":"500000","risk_pct":"2","expiry":"","max_lots":"1","source":"cron-job.org"}}
-     ```
-5. **Save**.
-
-**Step 3: the 11:05 job.** In the job list, use **Clone** (or create another the same
-way), change the title to `NIFTY trade card 11:05` and **Minutes** to stay `5` with
-**Hours** `11`. Save.
-
-**Step 4: test.** On the 10:05 job, press **Test run** (or *Execute now*). A correct
-setup returns **HTTP 204** (no content). Then GitHub → **Actions** shows a new
-*Daily trade card* run, and its summary says *Started by: cron-job.org*. Common errors:
-
-| Response | Meaning | Fix |
-|---|---|---|
-| 401 | Token wrong, expired or missing `Bearer ` | Re-copy the token into the `Authorization` header |
-| 403 | Token lacks Actions write, or wrong repo selected | Edit the token: repo = Option-trading, Actions = Read and write |
-| 404 | URL typo, or the token can't see the repo | Check the URL exactly; check the token's repository access |
-| 422 | Body wrong (branch name or inputs) | Paste the request body exactly as above |
-
-When the token expires, generate a new one the same way and replace it in both jobs.
 
 ---
 
