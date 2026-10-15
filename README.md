@@ -5,7 +5,7 @@ Every structure here is **defined-risk**: each short option is paired with a lon
 option, or with stock you already own, so the worst-case loss is known before entry.
 There is no naked selling anywhere in this plan. Sized for **₹5 lakh** capital.
 
-**It runs by itself.** Every weekday GitHub's scheduler tries at ~10:07, ~10:37 and ~11:07 IST (it can be late or skip; a late run posts nothing, so if there's no card by 11:00, run it by hand), a GitHub Action
+**It runs by itself.** GitHub starts scheduled runs on this repo 5-8 hours late, so the workflow is requested every hour overnight; the first run that starts between 04:30 and 10:05 IST waits and posts the card at **10:05 IST** on trading days (if there's no card by 10:45, run it by hand). A GitHub Action
 fetches live NIFTY spot, India VIX, 1-year history (Yahoo Finance) and the live
 option chain (NSE), applies every rule in this playbook, and publishes a
 **TRADE / NO TRADE** card. See [section 0](#0-automation-daily-trade-card).
@@ -60,8 +60,11 @@ GitHub's scheduler can start late or skip a run (see 0.1).
 
 ### 0.1 If the scheduled card doesn't appear
 
-GitHub's scheduler is best-effort: runs can start late or not at all. Check issue #3
-at about 11:00 IST. If there's no card for today, run it yourself: **Actions → Daily
+GitHub's scheduler is best-effort. On this repo it has started every scheduled run 5-8
+hours late, so the workflow asks for a run every hour from 00:47 to 10:47 IST; the first
+one that starts in time waits until 10:05 IST and posts, and the rest exit within seconds
+(they show in Actions as short or cancelled runs, which is expected). Check issue #3
+at about 10:45 IST. If there's no card for today, run it yourself: **Actions → Daily
 trade card → Run workflow** (defaults are fine). It posts to #3 in about 40 seconds.
 
 ---
