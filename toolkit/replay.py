@@ -37,7 +37,7 @@ SCENARIOS = {
 }
 
 RATIO = re.compile(r"(CE|PE) ([\d.]+)/(\d+) = ")
-WALL = re.compile(r"short (\d+)(CE|PE) is (?:beyond|at/inside) the (\d+) wall")
+WALL = re.compile(r"short (\d+)(CE|PE) is .*?the (\d+) wall")
 
 
 def parse(path):

@@ -41,8 +41,9 @@ option chain (NSE), applies every rule in this playbook, and publishes a
 day · trend picks the structure (DOWN → bear call, UP → bull put only if VIX isn't
 rising, RANGE → iron condor only if VIX is calming) · gap against the trade ≤ 0.7% ·
 credit/width ≥ 0.25 · short delta ≤ 0.30 · bid-ask ≤ 10% of mid · net credit ≥ 4× costs ·
-max loss ≤ 2% of capital · **short strike beyond the OI wall** (the strike with the
-largest open interest on that side, within 2 SD; not at it) · run time inside the
+max loss ≤ 2% of capital · **short strike beyond the OI wall, or at most 100 pts inside it**
+(the wall is the strike with the largest open interest on that side, within 2 SD;
+tune with `--wall-tolerance`, 0 = strictly beyond) · run time inside the
 **10:00-11:30 IST entry window**. It checks short strikes from 0.15 to 0.30 delta and picks
 the furthest-OTM one that passes. A run outside the window (e.g. you trigger it at 14:00)
 says **TRADE SIGNAL (outside entry window), not actionable now** and opens no issue. Every TRADE card includes the exact strikes, the
