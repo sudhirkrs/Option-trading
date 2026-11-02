@@ -140,11 +140,27 @@ def oi_wall(meta, opt, spot, em):
     return max(pool, key=lambda x: (x[1], -abs(x[0] - spot))) if pool else None
 
 
-def beyond_wall(short, opt, wall):
-    """Short must sit strictly beyond the wall (not at it)."""
+def wall_inside(short, opt, wall):
+    """Points the short sits inside the wall (<= 0 means strictly beyond it)."""
     if wall is None:
-        return True
-    return short > wall[0] if opt == "CE" else short < wall[0]
+        return 0
+    return wall[0] - short if opt == "CE" else short - wall[0]
+
+
+def beyond_wall(short, opt, wall, tol=0):
+    """Soft OI-wall rule: the short may sit up to `tol` points inside the wall.
+    tol=0 is the old strict rule (strictly beyond, not at it)."""
+    inside = wall_inside(short, opt, wall)
+    return inside < 0 if tol == 0 else inside <= tol
+
+
+def wall_note(s, wall, tol):
+    if wall is None:
+        return f"{s['opt']} not checked (no OI data)"
+    k = wall_inside(s["short"], s["opt"], wall)
+    pos = ("beyond" if k < 0 else f"inside by {k} pts (tolerance {tol})" if k <= tol
+           else f"inside by {k} pts (tolerance {tol}), too far inside")
+    return f"short {s['short']}{s['opt']} is {pos} the {wall[0]} wall ({wall[1]:,.0f} OI)"
 
 
 def in_window(now, window):
@@ -165,6 +181,8 @@ def main():
     ap.add_argument("--widths", default="100,150")
     ap.add_argument("--min-credit-ratio", type=float, default=0.25)
     ap.add_argument("--max-gap", type=float, default=0.7, help="skip if gap against the trade > this %%")
+    ap.add_argument("--wall-tolerance", type=int, default=100,
+                    help="short strike may sit this many points inside the OI wall (0 = strictly beyond)")
     ap.add_argument("--entry-window", default="10:00-11:30", help="IST window for new entries")
     ap.add_argument("--report-dir", default="")
     a = ap.parse_args()
@@ -278,11 +296,11 @@ def main():
 
     def best(opt, target):
         """Furthest-OTM spread (short delta up to 0.30) that meets the credit/width
-        minimum, preferring shorts beyond the OI wall; falls back to the plain
+        minimum, preferring shorts beyond (or within the tolerance of) the OI wall; falls back to the plain
         delta target when none qualifies."""
         tries = [spread(p, opt, d, widths) for d in sorted({min(target, 0.30), 0.15, 0.18, 0.20, 0.22, 0.25, 0.28, 0.30})]
         ok = [s for s in tries if s["ratio"] >= a.min_credit_ratio]
-        ok = [s for s in ok if beyond_wall(s["short"], opt, walls[opt])] or ok
+        ok = [s for s in ok if beyond_wall(s["short"], opt, walls[opt], a.wall_tolerance)] or ok
         if ok:
             return min(ok, key=lambda s: abs(p.delta(s["short"], opt)))
         return spread(p, opt, target, widths)
@@ -310,12 +328,8 @@ def main():
             (all(abs(p.delta(s["short"], s["opt"])) <= 0.30 for s in sides), "short delta ≤ 0.30"),
             (m["cost_ok"], f"cost ₹{m['cost']:,.0f} = {m['cost']/m['gross']*100:.1f}% of credit (net ≥ 4× cost)"),
             (liq_ok, f"liquidity: {liq}"),
-            (all(beyond_wall(s["short"], s["opt"], walls[s["opt"]]) for s in sides),
-             "OI wall: " + "; ".join(
-                 f"short {s['short']}{s['opt']} is "
-                 + ("beyond" if beyond_wall(s["short"], s["opt"], walls[s["opt"]]) else "at/inside")
-                 + f" the {walls[s['opt']][0]} wall ({walls[s['opt']][1]:,.0f} OI)"
-                 if walls[s["opt"]] else f"{s['opt']} not checked (no OI data)" for s in sides)),
+            (all(beyond_wall(s["short"], s["opt"], walls[s["opt"]], a.wall_tolerance) for s in sides),
+             "OI wall: " + "; ".join(wall_note(s, walls[s["opt"]], a.wall_tolerance) for s in sides)),
             (m["lots"] >= 1, f"size: {m['lots']} lot(s) within {a.risk_pct:.0f}% risk (₹{a.capital*risk:,.0f}), cap {a.max_lots}"),
         ]
         out += [f"* {'✅' if ok else '❌'} {txt}" for ok, txt in checks]
