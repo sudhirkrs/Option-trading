@@ -1,23 +1,23 @@
-# NIFTY trade card: Thu 05 Nov 2026, 10:05 IST
+# NIFTY trade card: Fri 06 Nov 2026, 10:05 IST
 
 ## Data
 | Item | Value | Source |
 |---|---|---|
-| NIFTY spot | 24,399.25 | Yahoo |
-| India VIX | 15.22 | Yahoo |
-| Expiry | Tue 17 Nov 2026 (12.2 calendar days) | NSE |
+| NIFTY spot | 24,614.15 | Yahoo |
+| India VIX | 16.81 | Yahoo |
+| Expiry | Tue 17 Nov 2026 (11.2 calendar days) | NSE |
 | Option prices | LIVE | NSE live option chain |
-| ATM IV (this expiry) | 13.0% | chain |
-| 1-SD expected move | ±581 → 23,818 – 24,981 | |
+| ATM IV (this expiry) | 16.0% | chain |
+| 1-SD expected move | ±690 → 23,924 – 25,304 | |
 
 ## Regime
-* IV percentile (1y): **69**
-* Trend: **RANGE**  (20-DMA 22,970, 50-DMA 23,231)
-* 20-day realised vol 16.5% vs implied 13.0% → premium -3.5 vol pts
-* VIX flat/mixed (5-day high 15.72)
-* Today's opening gap: +1.74%
+* IV percentile (1y): **78**
+* Trend: **RANGE**  (20-DMA 23,096, 50-DMA 23,240)
+* 20-day realised vol 15.5% vs implied 16.0% → premium +0.5 vol pts
+* VIX RISING (5-day high 15.72)
+* Today's opening gap: +0.01%
 * Events up to expiry: none listed
-* OI walls (largest OI within 2 SD): CE 24500 (26,010) · PE 23500 (15,644)
+* OI walls (largest OI within 2 SD): CE 25700 (33,944) · PE 24500 (22,641)
 
 ## Verdict
 **NO TRADE today.**
@@ -27,18 +27,18 @@
 ### IRON CONDOR
 | Leg | Strike | Price | Bid/Ask | IV | Delta | P(OTM) | P(touch) | OI |
 |---|---|---|---|---|---|---|---|---|
-| BUY (hedge, first) | 23800 PE | 66.42 | 66.30/66.55 | 15.9% | -0.17 | 82% | 37% | 14,880 |
-| SELL | 23900 PE | 81.65 | 81.50/81.80 | 15.5% | -0.21 | 79% | 45% | 6,161 |
-| BUY (hedge, first) | 25000 CE | 40.12 | 40.05/40.20 | 11.6% | +0.15 | 85% | 28% | 24,977 |
-| SELL | 24900 CE | 55.20 | 55.10/55.30 | 11.5% | +0.20 | 81% | 36% | 25,495 |
-* ❌ credit/width PE 15.2/100 = 0.15, CE 15.1/100 = 0.15 (need ≥ 0.25)
+| BUY (hedge, first) | 23950 PE | 82.28 | 82.10/82.45 | 18.8% | -0.18 | 81% | 39% | 2,237 |
+| SELL | 24050 PE | 99.22 | 99.00/99.45 | 18.5% | -0.21 | 78% | 46% | 1,266 |
+| BUY (hedge, first) | 25300 CE | 55.60 | 55.50/55.70 | 14.8% | +0.17 | 84% | 31% | 8,086 |
+| SELL | 25200 CE | 71.70 | 71.55/71.85 | 14.6% | +0.20 | 80% | 38% | 9,870 |
+* ❌ credit/width PE 16.9/100 = 0.17, CE 16.1/100 = 0.16 (need ≥ 0.25)
 * ✅ short delta ≤ 0.30
-* ✅ cost ₹218 = 11.0% of credit (net ≥ 4× cost)
+* ✅ cost ₹225 = 10.5% of credit (net ≥ 4× cost)
 * ✅ liquidity: OK
-* ❌ OI wall: short 23900PE is inside by 400 pts (tolerance 100), too far inside the 23500 wall (15,644 OI); short 24900CE is beyond the 24500 wall (26,010 OI)
+* ❌ OI wall: short 24050PE is beyond the 24500 wall (22,641 OI); short 25200CE is inside by 500 pts (tolerance 100), too far inside the 25700 wall (33,944 OI)
 * ✅ size: 1 lot(s) within 2% risk (₹10,000), cap 1
-* Credit 30.30 pts = ₹1,970/lot · max loss ₹4,645/lot · margin ~₹15,860/lot · net at 50% target ₹767/lot
-* Exits: **take profit** when spread ≤ 15.15 · **stop** when spread ≥ 90.90 (loss = 2× credit) · **time exit** Mon 16 Nov 15:00 IST
+* Credit 33.05 pts = ₹2,148/lot · max loss ₹4,471/lot · margin ~₹15,999/lot · net at 50% target ₹849/lot
+* Exits: **take profit** when spread ≤ 16.52 · **stop** when spread ≥ 99.15 (loss = 2× credit) · **time exit** Mon 16 Nov 15:00 IST
 
 <details><summary>Other structures (for reference only)</summary>
 
@@ -46,30 +46,30 @@
 ### BEAR CALL SPREAD
 | Leg | Strike | Price | Bid/Ask | IV | Delta | P(OTM) | P(touch) | OI |
 |---|---|---|---|---|---|---|---|---|
-| BUY (hedge, first) | 24900 CE | 55.20 | 55.10/55.30 | 11.5% | +0.20 | 81% | 36% | 25,495 |
-| SELL | 24800 CE | 77.12 | 76.95/77.30 | 11.5% | +0.25 | 75% | 47% | 6,122 |
-* ❌ credit/width CE 21.9/100 = 0.22 (need ≥ 0.25)
+| BUY (hedge, first) | 25150 CE | 81.67 | 81.55/81.80 | 14.6% | +0.23 | 78% | 42% | 1,579 |
+| SELL | 25050 CE | 104.30 | 104.10/104.50 | 14.5% | +0.27 | 73% | 51% | 3,477 |
+* ❌ credit/width CE 22.6/100 = 0.23 (need ≥ 0.25)
 * ✅ short delta ≤ 0.30
-* ✅ cost ₹110 = 7.7% of credit (net ≥ 4× cost)
+* ✅ cost ₹116 = 7.9% of credit (net ≥ 4× cost)
 * ✅ liquidity: OK
-* ✅ OI wall: short 24800CE is beyond the 24500 wall (26,010 OI)
+* ❌ OI wall: short 25050CE is inside by 650 pts (tolerance 100), too far inside the 25700 wall (33,944 OI)
 * ✅ size: 1 lot(s) within 2% risk (₹10,000), cap 1
-* Credit 21.92 pts = ₹1,425/lot · max loss ₹5,133/lot · margin ~₹15,860/lot · net at 50% target ₹602/lot
-* Exits: **take profit** when spread ≤ 10.96 · **stop** when spread ≥ 65.77 (loss = 2× credit) · **time exit** Mon 16 Nov 15:00 IST
+* Credit 22.62 pts = ₹1,471/lot · max loss ₹5,092/lot · margin ~₹15,999/lot · net at 50% target ₹619/lot
+* Exits: **take profit** when spread ≤ 11.31 · **stop** when spread ≥ 67.88 (loss = 2× credit) · **time exit** Mon 16 Nov 15:00 IST
 
 ### BULL PUT SPREAD
 | Leg | Strike | Price | Bid/Ask | IV | Delta | P(OTM) | P(touch) | OI |
 |---|---|---|---|---|---|---|---|---|
-| BUY (hedge, first) | 23950 PE | 90.53 | 90.35/90.70 | 15.3% | -0.23 | 77% | 49% | 1,169 |
-| SELL | 24050 PE | 112.08 | 111.90/112.25 | 15.1% | -0.27 | 72% | 58% | 709 |
-* ❌ credit/width PE 21.5/100 = 0.22 (need ≥ 0.25)
+| BUY (hedge, first) | 24100 PE | 108.95 | 108.75/109.15 | 18.4% | -0.23 | 76% | 50% | 7,272 |
+| SELL | 24200 PE | 131.65 | 131.40/131.90 | 18.1% | -0.27 | 72% | 58% | 11,436 |
+* ❌ credit/width PE 22.7/100 = 0.23 (need ≥ 0.25)
 * ✅ short delta ≤ 0.30
-* ✅ cost ₹118 = 8.4% of credit (net ≥ 4× cost)
+* ✅ cost ₹123 = 8.3% of credit (net ≥ 4× cost)
 * ✅ liquidity: OK
-* ❌ OI wall: short 24050PE is inside by 550 pts (tolerance 100), too far inside the 23500 wall (15,644 OI)
+* ✅ OI wall: short 24200PE is beyond the 24500 wall (22,641 OI)
 * ✅ size: 1 lot(s) within 2% risk (₹10,000), cap 1
-* Credit 21.55 pts = ₹1,401/lot · max loss ₹5,163/lot · margin ~₹15,860/lot · net at 50% target ₹582/lot
-* Exits: **take profit** when spread ≤ 10.77 · **stop** when spread ≥ 64.65 (loss = 2× credit) · **time exit** Mon 16 Nov 15:00 IST
+* Credit 22.70 pts = ₹1,476/lot · max loss ₹5,091/lot · margin ~₹15,999/lot · net at 50% target ₹615/lot
+* Exits: **take profit** when spread ≤ 11.35 · **stop** when spread ≥ 68.10 (loss = 2× credit) · **time exit** Mon 16 Nov 15:00 IST
 
 </details>
 
